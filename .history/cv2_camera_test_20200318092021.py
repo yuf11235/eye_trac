@@ -4,7 +4,7 @@ from cv2 import face
 
 # 加载算法模型
 detector = cv2.CascadeClassifier('etc/lbpcascades/lbpcascade_frontalface.xml')
-predictor = face.createFacemarkAAM() # Not support
+predictor = face.createFacemarkAAM() # Not support!!!
 
 # 相机资源
 cv2.namedWindow("Camera", cv2.WINDOW_AUTOSIZE)
