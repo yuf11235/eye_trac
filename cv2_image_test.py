@@ -1,5 +1,5 @@
 import numpy as np
-import cv2.cv2 as cv2
+import cv2
 # from cv2 import face
 
 # 加载算法模型
