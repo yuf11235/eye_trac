@@ -10,6 +10,9 @@ predictor = dlib.shape_predictor('etc/shape_predictor_68_face_landmarks.dat')
 img = cv2.imread("data\girl.jpg")
 gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
+# 转换为二值图
+
+
 # 识别人脸区域
 rects = detector(gray, 1)
 if len(rects) > 0:
@@ -20,6 +23,8 @@ if len(rects) > 0:
     img = cv2.rectangle(img, (rect.left(), rect.top()), (rect.right(), rect.bottom()), (255, 255, 255))
     for idx, point in enumerate(landmarks):
         pos = (point[0], point[1])
+        # 计算两个端点到中心的二值图的像素值的和，哪边大即为眼睛的方向
+        #
         cv2.circle(img, pos, 1, color=(0, 255, 0))
         # font = cv2.FONT_HERSHEY_SIMPLEX
         # cv2.putText(img, str(idx + 1), pos, font, 0.4, (0, 255, 255), 1, cv2.LINE_AA)
