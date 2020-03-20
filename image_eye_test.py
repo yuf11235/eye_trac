@@ -10,7 +10,12 @@ detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor('etc/shape_predictor_68_face_landmarks.dat')
 
 # 读取图像文件
-img = cv2.imread("data\girl.jpg")
+img = cv2.imread("data\\beauty.jpg")
+print(img.shape)
+fy = round((480 / img.shape[0]), 2)
+fx = round((640 / img.shape[1]), 2)
+img = cv2.resize(img, None, fx=fx, fy=fy, interpolation=cv2.INTER_CUBIC)
+print(img.shape)
 gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
 # 识别人脸区域
@@ -49,22 +54,24 @@ if len(rects) > 0:
     closing_img = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
     cv2.imshow("closing_img", closing_img)
     # 进行开运算
-    # kernel = np.ones((4, 1), np.uint8)
-    # opening_img = cv2.morphologyEx(closing_img, cv2.MORPH_OPEN, kernel)
-    # cv2.imshow("opening_img_1", opening_img)
+    kernel = np.ones((4, 4), np.uint8)
+    opening_img = cv2.morphologyEx(closing_img, cv2.MORPH_OPEN, kernel)
+    cv2.imshow("opening_img_1", opening_img)
     # # 进行闭运算
     # kernel = np.ones((4, 1), np.uint8)
-    # closing_img_2 = cv2.morphologyEx(closing_img, cv2.MORPH_CLOSE, kernel)
-    # # cv2.imshow("closing_img_2", closing_img_2)
+    closing_img = cv2.morphologyEx(opening_img, cv2.MORPH_CLOSE, kernel)
+    cv2.imshow("closing_img_2", closing_img)
     # binary_eye = closing_img_2
     # kernel_2 = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
     # kernel_dilated = cv2.dilate(closing_img, kernel_2)
     # cv2.imshow('kernel_dilated', kernel_dilated)
-
+    # 求出眼球的边缘，使用canny检测
+    # cannyimg = cv2.Canny(closing_img, closing_img.shape[0], closing_img.shape[1])
+    # cv2.imshow("cannyimg", thresh)
 
     # 求出瞳仁位置及其相对于直视时瞳孔的位置，用重心法
     # binary_eye = binary_eye == 0
-    binary_eye = thresh == 0
+    binary_eye = closing_img == 0
     x_c = np.sum(np.dot(binary_eye, np.arange(
         binary_eye.shape[1]))) / np.sum(binary_eye)
     y_c = np.sum(np.dot(binary_eye.T, np.arange(
