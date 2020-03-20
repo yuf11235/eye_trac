@@ -50,17 +50,17 @@ if len(rects) > 0:
     # 用数学形态学处理一下
     # 消除小的区域，保留大块的区域，从而定位车牌
     # 进行闭运算
-    kernel = np.ones((2, 2), np.uint8)
+    kernel = np.ones((3, 2), np.uint8)
     closing_img = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
     cv2.imshow("closing_img", closing_img)
     # 进行开运算
-    kernel = np.ones((4, 4), np.uint8)
+    kernel = np.ones((2, 2), np.uint8)
     opening_img = cv2.morphologyEx(closing_img, cv2.MORPH_OPEN, kernel)
     cv2.imshow("opening_img_1", opening_img)
     # # 进行闭运算
     # kernel = np.ones((4, 1), np.uint8)
-    closing_img = cv2.morphologyEx(opening_img, cv2.MORPH_CLOSE, kernel)
-    cv2.imshow("closing_img_2", closing_img)
+    # closing_img = cv2.morphologyEx(opening_img, cv2.MORPH_CLOSE, kernel)
+    # cv2.imshow("closing_img_2", closing_img)
     # binary_eye = closing_img_2
     # kernel_2 = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
     # kernel_dilated = cv2.dilate(closing_img, kernel_2)
@@ -71,7 +71,7 @@ if len(rects) > 0:
 
     # 求出瞳仁位置及其相对于直视时瞳孔的位置，用重心法
     # binary_eye = binary_eye == 0
-    binary_eye = closing_img == 0
+    binary_eye = opening_img == 0
     x_c = np.sum(np.dot(binary_eye, np.arange(
         binary_eye.shape[1]))) / np.sum(binary_eye)
     y_c = np.sum(np.dot(binary_eye.T, np.arange(
