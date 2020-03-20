@@ -10,7 +10,7 @@ detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor('etc/shape_predictor_68_face_landmarks.dat')
 
 # 读取图像文件
-img = cv2.imread("data\\timg.jpg")
+img = cv2.imread("data\girl.jpg")
 gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
 # 识别人脸区域
@@ -65,17 +65,13 @@ if len(rects) > 0:
     # 求出瞳仁位置及其相对于直视时瞳孔的位置，用重心法
     # binary_eye = binary_eye == 0
     binary_eye = thresh == 0
-    # print(binary_eye)
-    # for i in range(binary_eye.shape[0]):
-    #     for j in range(binary_eye.shape[1]):
     x_c = np.sum(np.dot(binary_eye, np.arange(
         binary_eye.shape[1]))) / np.sum(binary_eye)
     y_c = np.sum(np.dot(binary_eye.T, np.arange(
         binary_eye.shape[0]))) / np.sum(binary_eye)
     print("(x_c, y_c) = ({}, {})".format(x_c, y_c))
     # 不妨设直视时，瞳孔的为值为37、38、40、41几个点的平均值
-    x_orth, y_orth = (landmarks[37] + landmarks[38] +
-                      landmarks[40] + landmarks[41]) / 4 - [o_x, o_y]
+    x_orth, y_orth = np.sum(eye_list.reshape(-1, 2), axis=0) / 6 - [o_x, o_y]
     print("(x_orth, y_orth) = ({}, {})".format(x_orth, y_orth))
     # 判断眼睛向左向右
     if x_c <= x_orth*0.8:
