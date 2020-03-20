@@ -8,9 +8,9 @@ detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor('etc/shape_predictor_68_face_landmarks.dat')
 
 # 读取图像文件
-# img = cv2.imread("data\\beauty.jpg")
+img = cv2.imread("data\\beauty.jpg")
 # img = cv2.imread("data\girl.jpg")
-img = cv2.imread("data\\timg.jpg")
+# img = cv2.imread("data\\timg.jpg")
 gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
 # 识别人脸区域
@@ -49,9 +49,22 @@ if len(rects) > 0:
     cv2.imshow('binary', thresh)
     print("left_eye binary")
     print(type(thresh))
+
+    # 用数学形态学处理一下
+    # 消除小的区域，保留大块的区域，从而定位车牌
+    # 进行闭运算
+    kernel = np.ones((2, 1), np.uint8)
+    closing_img = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
+    cv2.imshow("closing_img", closing_img)
+    # 进行开运算
+    opening_img = cv2.morphologyEx(closing_img, cv2.MORPH_OPEN, kernel)
+    cv2.imshow("opening_img_1", opening_img)
+
+    binary_eye = opening_img
+
     # 求出瞳仁位置及其相对于直视时瞳孔的位置，用重心法
-    binary_eye = thresh == 0
-    print(binary_eye)
+    binary_eye = binary_eye == 0
+    # print(binary_eye)
     # for i in range(binary_eye.shape[0]):
     #     for j in range(binary_eye.shape[1]):
     x_c = np.sum(np.dot(binary_eye, np.arange(binary_eye.shape[1]))) / np.sum(binary_eye)
