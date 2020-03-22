@@ -57,6 +57,10 @@ if len(rects) > 0:
     kernel = np.ones((2, 2), np.uint8)
     opening_img = cv2.morphologyEx(closing_img, cv2.MORPH_OPEN, kernel)
     cv2.imshow("opening_img_1", opening_img)
+    # 尝试一下hough变化检测圆,。。。。。。不幸的是，尝试失败了，瞳孔一般也不会全部露出来的
+    # circles = cv2.HoughCircles(
+    #     image=opening_img, method=cv2.HOUGH_GRADIENT, dp=1, minDist=6)
+    # print(circles)
     # # 进行闭运算
     # kernel = np.ones((4, 1), np.uint8)
     # closing_img = cv2.morphologyEx(opening_img, cv2.MORPH_CLOSE, kernel)
