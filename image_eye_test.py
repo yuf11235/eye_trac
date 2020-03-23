@@ -57,10 +57,20 @@ if len(rects) > 0:
     kernel = np.ones((2, 2), np.uint8)
     opening_img = cv2.morphologyEx(closing_img, cv2.MORPH_OPEN, kernel)
     cv2.imshow("opening_img_1", opening_img)
+
     # 尝试一下hough变化检测圆,。。。。。。不幸的是，尝试失败了，瞳孔一般也不会全部露出来的
     # circles = cv2.HoughCircles(
     #     image=opening_img, method=cv2.HOUGH_GRADIENT, dp=1, minDist=6)
     # print(circles)
+
+    # 尝试一下检测眼部轮廓后，计算眼白的比例进行判断，感觉还是这个靠谱一点吧，谁知道呢
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    # cv2.drawContours(thresh, contours, -1, (0, 0, 255), 3)
+    cv2.imshow("img", thresh)
+    # cv2.waitKey(0)
+
+
+
     # # 进行闭运算
     # kernel = np.ones((4, 1), np.uint8)
     # closing_img = cv2.morphologyEx(opening_img, cv2.MORPH_CLOSE, kernel)
