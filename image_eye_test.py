@@ -4,18 +4,21 @@ import numpy as np
 import cv2
 import dlib
 import matplotlib.pyplot as plt
+import time
 
 # 加载算法模型
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor('etc/shape_predictor_68_face_landmarks.dat')
 
 # 读取图像文件
-img = cv2.imread("data\\beauty.jpg")
+img = cv2.imread("data\\p2.jpg")
 print(img.shape)
 fy = round((480 / img.shape[0]), 2)
 fx = round((640 / img.shape[1]), 2)
 img = cv2.resize(img, None, fx=fx, fy=fy, interpolation=cv2.INTER_CUBIC)
 print(img.shape)
+
+t1 = time.time()
 gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
 # 识别人脸区域
@@ -38,8 +41,9 @@ if len(rects) > 0:
     eye_right_down_y = max(eye_list[:, 1])
     img = cv2.rectangle(img, (o_x, o_y), 
                         (eye_right_down_x, eye_right_down_y), (255, 255, 255))
-    left_eye = gray[o_y: eye_right_down_y, o_x: eye_right_down_x]
-    # cv2.imshow('left eye', left_eye)
+
+    left_eye = gray[o_y: eye_right_down_y, o_x: eye_right_down_x]    
+    cv2.imshow('left eye', left_eye)
     # 转换为二值图
     maxi = float(left_eye.max())
     mini = float(left_eye.min())
@@ -47,16 +51,32 @@ if len(rects) > 0:
     # 二值化,返回阈值ret  和  二值化操作后的图像thresh
     ret, thresh = cv2.threshold(left_eye, x, 255, cv2.THRESH_BINARY)
     cv2.imshow('binary', thresh)
+    print(thresh.shape)
+
     # 用数学形态学处理一下
-    # 消除小的区域，保留大块的区域，从而定位车牌
+
+    kernel = np.ones((4, 4), np.uint8)
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+    cv2.imshow("opening_img_1", thresh)
+    # 在thresh上下左右方加一行空白
+    thresh = np.vstack([np.ones((1, thresh.shape[1])), thresh])
+    thresh = np.vstack([thresh, np.ones((1, thresh.shape[1]))])
+    thresh = np.hstack([np.ones((thresh.shape[0], 1)), thresh])
+    thresh = np.hstack([thresh, np.ones((thresh.shape[0], 1))])
+    cv2.imshow('thresh', thresh)
     # 进行闭运算
-    kernel = np.ones((3, 2), np.uint8)
+    print(thresh.shape)
+    kernel = np.ones((thresh.shape[0] // 2, 1), np.uint8)
     closing_img = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
     cv2.imshow("closing_img", closing_img)
+    kernel = np.ones((1, thresh.shape[1] // 8), np.uint8)
+    closing_img = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
+    cv2.imshow("closing_img2", closing_img)
     # 进行开运算
-    kernel = np.ones((2, 2), np.uint8)
-    opening_img = cv2.morphologyEx(closing_img, cv2.MORPH_OPEN, kernel)
-    cv2.imshow("opening_img_1", opening_img)
+    # kernel = np.ones((2, 2), np.uint8)
+    # opening_img = cv2.morphologyEx(closing_img, cv2.MORPH_OPEN, kernel)
+    # cv2.imshow("opening_img_2", opening_img)
+    # print(opening_img)
 
     # 尝试一下hough变化检测圆,。。。。。。不幸的是，尝试失败了，瞳孔一般也不会全部露出来的
     # circles = cv2.HoughCircles(
@@ -64,10 +84,15 @@ if len(rects) > 0:
     # print(circles)
 
     # 尝试一下检测眼部轮廓后，计算眼白的比例进行判断，感觉还是这个靠谱一点吧，谁知道呢
-    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    # contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     # cv2.drawContours(thresh, contours, -1, (0, 0, 255), 3)
-    cv2.imshow("img", thresh)
+    # cv2.imshow("img1", thresh)
+    # print(contours)
     # cv2.waitKey(0)
+    # plt.scatter(contours[2].reshape(-1, 2)[:, 0], 
+    #             contours[2].reshape(-1, 2)[:, 1])
+    # plt.grid()
+    # plt.show()
 
 
 
@@ -85,7 +110,8 @@ if len(rects) > 0:
 
     # 求出瞳仁位置及其相对于直视时瞳孔的位置，用重心法
     # binary_eye = binary_eye == 0
-    binary_eye = opening_img == 0
+    binary_eye = closing_img == 0
+    # binary_eye = contours[2].reshape(-1, 2)
     x_c = np.sum(np.dot(binary_eye, np.arange(
         binary_eye.shape[1]))) / np.sum(binary_eye)
     y_c = np.sum(np.dot(binary_eye.T, np.arange(
@@ -95,27 +121,30 @@ if len(rects) > 0:
     x_orth, y_orth = np.sum(eye_list.reshape(-1, 2), axis=0) / 6 - [o_x, o_y]
     print("(x_orth, y_orth) = ({}, {})".format(x_orth, y_orth))
     # 判断眼睛向左向右
-    if x_c <= x_orth*0.8:
+    if x_c <= x_orth*0.7:
         h_direction = '右'
-    elif x_c <= x_orth*1.2:
+    elif x_c <= x_orth*1.3:
         h_direction = '中'
     else:
         h_direction = '左'
     print(h_direction)
     # 判断眼睛向上向下
-    if y_c <= y_orth*0.75:
+    if y_c <= y_orth*0.7:
         v_direction = '上'
-    elif y_c <= y_orth*1.25:
+    elif y_c <= y_orth*1.3:
         v_direction = '中'
     else:
         v_direction = '下'
     print(v_direction)
 
     # plt.scatter(landmarks[:, 0], -landmarks[:, 1])
-    # plt.scatter(left_eye[:, 0], -left_eye[:, 1])
+    # # plt.scatter(left_eye[:, 0], -left_eye[:, 1])
     # plt.grid()
     # plt.show()
 cv2.imshow('landmarks', img)
+
+t2 = time.time()
+print("t = {}ms".format((t2-t1)*1000))
 # 释放资源
 cv2.waitKey()
 cv2.destroyAllWindows()
